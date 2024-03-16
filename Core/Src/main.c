@@ -20,11 +20,16 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
+#include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+/* 声明引用外部队列 & 二???信号量 */
+extern QueueHandle_t Test_Queue;
 
+static uint32_t send_data1 = 1;
+static uint32_t send_data2 = 2;
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -57,6 +62,10 @@ void MX_FREERTOS_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+
+/* USER CODE END PFP */
+
+/* USER CODE BEGIN 0 */
 /* USER CODE END 0 */
 
 /**
@@ -87,6 +96,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -147,6 +157,23 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  BaseType_t pxHigherPriorityTaskWoken;
+  if(GPIO_Pin==GPIO_PIN_0)
+  { xQueueSendFromISR(Test_Queue, 
+											&send_data1,
+											&pxHigherPriorityTaskWoken);
+                      
+		portYIELD_FROM_ISR(pxHigherPriorityTaskWoken);
+  }
+  else if(GPIO_Pin==GPIO_PIN_13)
+  {xQueueSendFromISR(Test_Queue,
+											&send_data2,
+											&pxHigherPriorityTaskWoken);
+		portYIELD_FROM_ISR(pxHigherPriorityTaskWoken);}
+
+}
 
 /* USER CODE END 4 */
 
